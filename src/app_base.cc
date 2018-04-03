@@ -65,7 +65,7 @@ int app_base::readtimed(const int & fd, byte_t * buffer, const int & sec, const 
 	timeout.tv_sec = sec;
 	timeout.tv_usec = usec;
 
-	if (select(fd + 1, &read_fds, NULL, NULLs, &timeout) != 1) {
+	if (select(fd + 1, &read_fds, NULL, NULL, &timeout) != 1) {
 #ifdef DEBUG
 		LOG_WARNING("readtimed() failed: timeout 0");
 #endif
@@ -83,7 +83,7 @@ int app_base::readtimed(const int & fd, byte_t * buffer, const size_t  & readSiz
 	timeout.tv_sec = sec;
 	timeout.tv_usec = usec;
 
-	if (select(fd + 1, &read_fds, NULL, NULLs, &timeout) != 1) {
+	if (select(fd + 1, &read_fds, NULL, NULL, &timeout) != 1) {
 #ifdef DEBUG
 		LOG_WARNING("readtimed() failed: timeout 0");
 #endif
@@ -100,7 +100,6 @@ client_base::client_base(
 	const std::string & servername,
 	const std::string & serverinstance,
 	const std::string & dif) :
-	_name(name), _instance(instance), _dif(dif) :
 	app_base(name, instance, dif), _servername(servername), _serverinstance(serverinstance) {
 	_serverappl = _servername + "|" + _serverinstance;
 	rina_flow_spec_unreliable(&_flow_spec);
@@ -133,11 +132,17 @@ int client_base::run() {
 		return fd;
 	}
 
+
+	struct timeval timeout;
+	timeout.tv_sec = _timeout_sec;
+	timeout.tv_usec = _timeout_usec;
+
+
 	/* check first flow allocation */
 	FD_ZERO(&fs);
 	FD_SET(fd, &fs);
 
-	if (select(fd + 1, fs, NULL, NULL, _timeout_sec, _timeout_usec) != 1) {
+	if (select(fd + 1, &fs, NULL, NULL, &timeout) != 1) {
 #ifdef DEBUG
 		LOG_ERR("rina_flow_alloc() timeout: return = 0");
 #endif
@@ -191,9 +196,13 @@ int server_base::run() {
 		return tfd;
 	}
 
+	struct timeval timeout;
+	timeout.tv_sec = _timeout_sec;
+	timeout.tv_usec = _timeout_usec;
+
 	FD_ZERO(&fs);
 	FD_SET(tfd, &fs);
-	if (select(tfd + 1, fs, NULL, NULL, _timeout_sec, _timeout_usec) != 1)){
+	if (select(tfd + 1, &fs, NULL, NULL, &timeout) != 1){
 #ifdef DEBUG
 	LOG_ERR("select() timeout on register: return -1");
 #endif
@@ -218,7 +227,7 @@ int server_base::run() {
 
 		FD_ZERO(&fs);
 		FD_SET(cfd, &fs);
-		selectRet = select(cfd + 1, fs, NULL, NULL, _timeout_sec, _timeout_usec) != 1);
+		selectRet = select(cfd + 1, &fs, NULL, NULL, &timeout);
 		if (selectRet < 0) {
 #ifdef DEBUG
 			LOG_ERR("select() error: stop server");

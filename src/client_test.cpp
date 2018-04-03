@@ -1,8 +1,8 @@
-#include <rina/api.h>
-#include <iostream>
 #include "app_base.h"
+#include <iostream>
 
 class testClient : public client_base {
+public:
 	testClient(
 		const std::string & name,
 		const std::string & instance,
@@ -14,7 +14,7 @@ class testClient : public client_base {
 	int handle_flow(const int & fd) {
 		std::cout << "Client - Flow created"<< std::endl;
 	}
-}
+};
 
 int main(){
 	testClient("testClient", "1", "serverClient", "1", "normal.DIF");

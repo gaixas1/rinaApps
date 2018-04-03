@@ -6,8 +6,8 @@
 //#include "../../api.h"
 #include <rina/api.h>
 
-typedef uint_8	byte_t;
-typedef uint_8	datatype_t;
+typedef uint8_t	byte_t;
+typedef uint8_t	datatype_t;
 
 #pragma pack(push, 1)
 typedef struct {
