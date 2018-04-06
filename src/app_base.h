@@ -3,8 +3,16 @@
 #include <string>
 #include <mutex>
 
-//#include "../../api.h"
 #include <rina/api.h>
+
+
+#define EC_RINA_OPEN -1
+#define EC_RINA_REGISTER -2
+#define EC_RINA_REGISTER_WAIT -2
+#define EC_FLOW_ALLOC -3
+#define EC_FLOW_ALLOC_WAIT -4
+#define EC_RINA_REGISTER_TIMEOUT -5
+#define EC_FLOW_ALLOC_TIMEOUT -6
 
 typedef uint8_t	byte_t;
 typedef uint8_t	datatype_t;
@@ -29,19 +37,23 @@ class app_base {
 			const std::string & instance,
 			const std::string & dif);
 
+		virtual ~app_base();
+
 		void setTimeout(const int & src, const int & usec);
 
 	protected:
+		bool isRegistered;
+		int cfd;
 		int _timeout_sec, _timeout_usec;
 		std::string _name;
 		std::string _instance;
 		std::string _dif;
 		std::string _appl;
 
-		int read(const int & fd, byte_t * buffer);
-		int read(const int & fd, byte_t * buffer, const size_t  & readSize);
-		int readtimed(const int & fd, byte_t * buffer, const int & sec, const int & usec);
-		int readtimed(const int & fd, byte_t * buffer, const size_t  & readSize, const int & sec, const int & usec);
+		int readdata(const int & fd, byte_t * buffer);
+		int readdata(const int & fd, byte_t * buffer, const size_t  & readSize);
+		int readdatatimed(const int & fd, byte_t * buffer, const int & sec, const int & usec);
+		int readdatatimed(const int & fd, byte_t * buffer, const size_t  & readSize, const int & sec, const int & usec);
 };
 
 class client_base : public app_base {
@@ -76,12 +88,12 @@ public:
 protected:
 	virtual int handle_flow(const int & fd) = 0;
 
-	virtual void after_end();
+	virtual int after_end();
 	virtual void after_endThread(const int & fd, int returnCode);
 
 private:
 	std::mutex mtx;
-	bool close;
+	bool closeNextLoop;
 	bool waitForClose;
 	int numRunningThreads;
 

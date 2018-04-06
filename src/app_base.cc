@@ -1,6 +1,10 @@
 #include "app_base.h"
 #include <thread>
+#include <string.h>
 #include <unistd.h>
+#include <iostream>
+
+#define DEBUG 1
 
 // Base APP
 app_base::app_base(
@@ -11,6 +15,19 @@ app_base::app_base(
 	_appl = _name + "|" + _instance;
 	_timeout_sec = 1;
 	_timeout_usec = 0;
+	isRegistered = false;
+}
+app_base::~app_base() {
+	if(isRegistered){
+		if(rina_unregister(cfd, 
+		_dif.c_str(), 
+		_appl.c_str(),
+		0) != 0){
+#ifdef DEBUG
+		std::cerr << "rina_unregister failed : return != 0" << std::endl;
+#endif
+		}
+	}
 }
 
 void app_base::setTimeout(const int & sec, const int & usec) {
@@ -18,24 +35,23 @@ void app_base::setTimeout(const int & sec, const int & usec) {
 	_timeout_usec = usec;
 }
 
-int app_base::read(const int & fd, byte_t * buffer) {
+int app_base::readdata(const int & fd, byte_t * buffer) {
 	size_t  rem = sizeof(mindata_t);
 	ssize_t ret = read(fd, buffer, rem);
 	if (ret <= 0) {
 #ifdef DEBUG
 		if (ret == 0) {
-			LOG_ERR("read() failed: return 0");
-		}
-		else {
-			LOG_ERR("read() failed: %s", strerror(errno));
+			std::cerr << "read () failed: return 0"<< std::endl;
+		} else {
+			std::cerr << "read () failed: " << strerror(errno) << std::endl;
 		}
 #endif
 		return ret;
 	}
-	return read(fd, buffer + ret, ((mindata_t *)buffer)->size - ret);
+	return readdata(fd, buffer + ret, ((mindata_t *)buffer)->size - ret);
 }
 
-int app_base::read(const int & fd, byte_t * buffer, const size_t  & readSize) {
+int app_base::readdata(const int & fd, byte_t * buffer, const size_t  & readSize) {
 	size_t  rem = readSize;
 	ssize_t ret;
 	do {
@@ -43,10 +59,9 @@ int app_base::read(const int & fd, byte_t * buffer, const size_t  & readSize) {
 		if (ret <= 0) {
 #ifdef DEBUG
 			if (ret == 0) {
-				LOG_ERR("read() failed: return 0");
-			}
-			else {
-				LOG_ERR("read() failed: %s", strerror(errno));
+				std::cerr << "read () failed: return 0"<< std::endl;
+			} else {
+				std::cerr << "read () failed: " << strerror(errno) << std::endl;
 			}
 #endif
 			return ret;
@@ -56,7 +71,7 @@ int app_base::read(const int & fd, byte_t * buffer, const size_t  & readSize) {
 	} while (rem > 0);
 }
 
-int app_base::readtimed(const int & fd, byte_t * buffer, const int & sec, const int & usec) {
+int app_base::readdatatimed(const int & fd, byte_t * buffer, const int & sec, const int & usec) {
 	fd_set read_fds;
 	FD_ZERO(&read_fds);
 	FD_SET(fd, &read_fds);
@@ -67,14 +82,14 @@ int app_base::readtimed(const int & fd, byte_t * buffer, const int & sec, const 
 
 	if (select(fd + 1, &read_fds, NULL, NULL, &timeout) != 1) {
 #ifdef DEBUG
-		LOG_WARNING("readtimed() failed: timeout 0");
+		std::cerr << "readtimed () failed: timeout"<< std::endl;
 #endif
 		return 0;
 	}
-	return read(fd, buffer);
+	return readdata(fd, buffer);
 }
 
-int app_base::readtimed(const int & fd, byte_t * buffer, const size_t  & readSize, const int & sec, const int & usec) {
+int app_base::readdatatimed(const int & fd, byte_t * buffer, const size_t  & readSize, const int & sec, const int & usec) {
 	fd_set read_fds;
 	FD_ZERO(&read_fds);
 	FD_SET(fd, &read_fds);
@@ -85,11 +100,11 @@ int app_base::readtimed(const int & fd, byte_t * buffer, const size_t  & readSiz
 
 	if (select(fd + 1, &read_fds, NULL, NULL, &timeout) != 1) {
 #ifdef DEBUG
-		LOG_WARNING("readtimed() failed: timeout 0");
+		std::cerr << "readtimed () failed: timeout"<< std::endl;
 #endif
 		return 0;
 	}
-	return read(fd, buffer, readSize);
+	return readdata(fd, buffer, readSize);
 }
 
 
@@ -106,58 +121,33 @@ client_base::client_base(
 }
 
 int client_base::run() {
-	int cfd;
 	int fd;
 	fd_set fs;
-
+/*
 	cfd = rina_open();
 	if (cfd < 0) {
 #ifdef DEBUG
-		LOG_ERR("rina_open() failed: return < 0");
+		std::cerr << "rina_open () failed: return "<< cfd << std::endl;
 #endif
-		return cfd;
+		return EC_RINA_OPEN;
 	}
-
-
-	fd = rina_flow_alloc(_dif.c_str(),
+*/
+	fd = rina_flow_alloc(
+		(_dif == "") ? NULL : _dif.c_str(), 
 		_appl.c_str(),
 		_serverappl.c_str(),
 		&_flow_spec,
-		RINA_F_NOWAIT);
+		0);
 
-	if (fd < 0) {
+	if (fd != 0) {
 #ifdef DEBUG
-		LOG_ERR("rina_flow_alloc() failed: return < 0");
+		std::cerr << "rina_flow_alloc () failed: return "<< fd << std::endl;
 #endif
-		return fd;
-	}
-
-
-	struct timeval timeout;
-	timeout.tv_sec = _timeout_sec;
-	timeout.tv_usec = _timeout_usec;
-
-
-	/* check first flow allocation */
-	FD_ZERO(&fs);
-	FD_SET(fd, &fs);
-
-	if (select(fd + 1, &fs, NULL, NULL, &timeout) != 1) {
-#ifdef DEBUG
-		LOG_ERR("rina_flow_alloc() timeout: return = 0");
-#endif
-		return 0;
-	}
-	
-	fd = rina_flow_alloc_wait(fd);
-	if (fd < 0) {
-#ifdef DEBUG
-		LOG_ERR("rina_flow_alloc_wait() failed: return < 0");
-#endif
-		return fd;
+		return EC_FLOW_ALLOC;
 	}
 
 	handle_flow(fd);
+	close(fd);
 }
 
 // Base Server
@@ -170,92 +160,68 @@ server_base::server_base(
 }
 
 int server_base::run() {
-	int cfd;
-	int tfd;
+	int fd;
 	int selectRet;
 	fd_set fs;
 
 	cfd = rina_open();
 	if (cfd < 0) {
 #ifdef DEBUG
-		LOG_ERR("rina_open() failed: return < 0");
+		std::cerr << "rina_open () failed: return "<< cfd << std::endl;
 #endif
-		return cfd;
+		return EC_RINA_OPEN;
 	}
 
-	tfd = rina_register(
+	if(rina_register(
 		cfd,
-		_dif.c_str(), 
+		(_dif == "") ? NULL : _dif.c_str(), 
 		_appl.c_str(),
-		RINA_F_NOWAIT);
-
-	if (tfd < 0) {
+		0) != 0) {
 #ifdef DEBUG
-		LOG_ERR("rina_register() failed: return < 0");
+		std::cerr << "rina_register () failed: return -1" << std::endl;
 #endif
-		return tfd;
+		return EC_RINA_REGISTER;
 	}
+
+	isRegistered = true;
 
 	struct timeval timeout;
-	timeout.tv_sec = _timeout_sec;
-	timeout.tv_usec = _timeout_usec;
+	timeout.tv_sec = 5;
+	timeout.tv_usec = 0;
 
-	FD_ZERO(&fs);
-	FD_SET(tfd, &fs);
-	if (select(tfd + 1, &fs, NULL, NULL, &timeout) != 1){
-#ifdef DEBUG
-	LOG_ERR("select() timeout on register: return -1");
-#endif
-		return -1;
-	}
 
-	tfd = rina_register_wait(cfd, tfd);
-	if (tfd < 0) {
-#ifdef DEBUG
-		LOG_ERR("select() timeout on register: return < 0");
-#endif
-		return tfd;
-	}
 
-	close = false;
+	closeNextLoop = false;
 	numRunningThreads = 0;
 	// Loop for connections
 	for (;;) {
-		if (close) {
+		if (closeNextLoop) {
 			break;
 		}
 
 		FD_ZERO(&fs);
 		FD_SET(cfd, &fs);
 		selectRet = select(cfd + 1, &fs, NULL, NULL, &timeout);
+		if (selectRet == 0) {
+			continue;
+		} 
 		if (selectRet < 0) {
 #ifdef DEBUG
-			LOG_ERR("select() error: stop server");
+			std::cerr << "listen  () failed: return "<< selectRet << "; stop listening" <<  std::endl;
 #endif
 			break;
-		} else if (selectRet == 0) {
-			continue;
-		}
+		} 
 
 		// New flow request
-		tfd = rina_flow_accept(cfd, NULL, NULL, RINA_F_NORESP);
-		if (tfd < 0) {
+		fd = rina_flow_accept(cfd, NULL, NULL, 0);
+		if (fd < 0) {
 #ifdef DEBUG
-			LOG_ERR("rina_flow_accept() failure: return < 0");
+			std::cerr << "rina_flow_accept () failed: return "<< fd << "; stop listening" <<  std::endl;
 #endif
-			return tfd;
-		}
-		
-		tfd = rina_flow_respond(cfd, tfd, 0);
-
-		if (tfd < 0) {
-#ifdef DEBUG
-			LOG_ERR("rina_flow_respond	() failed: return < 0"); ??
-#endif
-			return tfd;
+			break;
 		}
 
-		std::thread t(&server_base::runThread, this, tfd);
+		std::thread t(&server_base::runThread, this, fd);
 		t.detach();
 	}
 
@@ -265,7 +231,7 @@ int server_base::run() {
 		}
 	}
 
-	after_end();
+	return after_end();
 }
 
 
@@ -280,8 +246,10 @@ void server_base::runThread(const int & fd) {
 	numRunningThreads--;
 	after_endThread(fd, returnCode);
 	mtx.unlock();
+std::cout << "Clossing flow"<< std::endl;
+	close(fd);
 }
 
 int server_base::handle_flow(const int & fd) { return 0; }
-void server_base::after_end() {}
+int server_base::after_end() {}
 void server_base::after_endThread(const int & fd, int returnCode){}
