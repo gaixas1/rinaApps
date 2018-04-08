@@ -21,7 +21,7 @@ namespace ra {
 	- Timeout variants return 0 if no data is available before the specified time. Timeout time is specified in milliseconds
 	*/
 	int ReadData(const int Fd, byte_t * Buffer);
-	int ReadData(const int Fd, byte_t * Buffer, const size_t & Size);
+	int ReadData(const int Fd, byte_t * Buffer, const size_t Size);
 	int ReadDataTimeout(const int Fd, byte_t * Buffer, const int mSec = 0);
 	int ReadDataTimeout(const int Fd, byte_t * Buffer, const size_t  Size, const int mSec = 0);
 
@@ -47,7 +47,7 @@ namespace ra {
 		If mSec not used or mSec < 0 :> blocking call
 	*/
 	int AllocFlow(const char * MyName, const char * AppName, const struct rina_flow_spec * FlowSpec, const char * DIFName = NULL);
-	int AllocFlow(const char * MyName, const char * AppName, const struct rina_flow_spec * FlowSpec, const int mSec), const char * DIFName = NULL;
+	int AllocFlow(const char * MyName, const char * AppName, const struct rina_flow_spec * FlowSpec, const int mSec, const char * DIFName = NULL);
 
 	/*
 	Register the MyApp in DIFName
@@ -106,12 +106,12 @@ namespace ra {
 					std::cerr << "ReadData () failed: " << strerror(errno) << std::endl;
 				}
 #endif
-				return ret;
+				return Ret;
 			}
 			Rem -= Ret;
-			buffer += Ret;
+			Buffer += Ret;
 			DataSize += Ret;
-		} while (rem > 0);
+		} while (Rem > 0);
 		return DataSize;
 	}
 
@@ -152,7 +152,7 @@ namespace ra {
 		}
 	}
 
-	int WriteDataTimeout(const int Fd, byte_t * Buffer, const size_t Size, const int mSec = 0) {
+	int WriteDataTimeout(const int Fd, byte_t * Buffer, const size_t Size, const int mSec) {
 		struct pollfd Fds = { .fd = Fd,.events = POLLOUT };
 		int PollRet = poll(&Fds, 1, mSec);
 
@@ -163,10 +163,10 @@ namespace ra {
 			return -1;
 		}
 
-		return WriteData(Fd, Buffer);
+		return WriteData(Fd, Buffer, Size);
 	}
 
-	int AllocFlow(const char * MyName, const char * AppName, const struct rina_flow_spec * FlowSpec, const char * DIFName = NULL) {
+	int AllocFlow(const char * MyName, const char * AppName, const struct rina_flow_spec * FlowSpec, const char * DIFName) {
 		int Fd = rina_flow_alloc(DIFName, MyName, AppName, FlowSpec, 0);
 #ifdef DEBUG
 		if (Fd < 0) {
@@ -176,7 +176,7 @@ namespace ra {
 		return Fd;
 	}
 
-	int AllocFlow(const char * MyName, const char * AppName, const struct rina_flow_spec * FlowSpec, const int mSec, const char * DIFName = NULL) {
+	int AllocFlow(const char * MyName, const char * AppName, const struct rina_flow_spec * FlowSpec, const int mSec, const char * DIFName) {
 		if (mSec < 0) {
 			return AllocFlow(MyName, AppName, FlowSpec, DIFName);
 		}
@@ -205,7 +205,7 @@ namespace ra {
 		return Fd;
 	}
 
-	bool RegisterApp(int & Cfd, const char * MyName, const char * DIFName = NULL) {
+	bool RegisterApp(int & Cfd, const char * MyName, const char * DIFName) {
 		if (Cfd < 0) {
 			Cfd = rina_open();
 			if (Cfd < 0) {
@@ -225,7 +225,7 @@ namespace ra {
 		return true;
 	}
 
-	bool RegisterApp(int & Cfd, const char * MyName, const int mSec, const char * DIFName = NULL) {
+	bool RegisterApp(int & Cfd, const char * MyName, const int mSec, const char * DIFName) {
 		if (mSec < 0) {
 			return RegisterApp(Cfd, MyName, DIFName);
 		}
@@ -268,7 +268,7 @@ namespace ra {
 	}
 
 	int ListenFlow(const int Cfd, char **RemoteApp, struct rina_flow_spec * FlowSpec) {
-		int Fd = rina_flow_accept(cfd, RemoteApp, FlowSpec, 0);
+		int Fd = rina_flow_accept(Cfd, RemoteApp, FlowSpec, 0);
 #ifdef DEBUG
 		if (Fd < 0) {
 			std::cerr << "rina_flow_accept () failed: " << strerror(errno) << std::endl;

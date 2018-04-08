@@ -26,7 +26,7 @@ namespace ra {
 		bool WaitForClose;
 
 		virtual int HandleFlow(const int Fd) { return 0; }
-		virtual int AfterEnd() { return 0 };
+		virtual int AfterEnd() { return 0; };
 		virtual void AfterEndFlow(const int & Fd, const int ReturnCode) {};
 
 	private:
@@ -75,7 +75,7 @@ namespace ra {
 				break;
 			}
 
-			std::thread t(&server_base::RunThread, this, fd);
+			std::thread t(&BaseServer::RunThread, this, Fd);
 			t.detach();
 		}
 
@@ -92,13 +92,13 @@ namespace ra {
 		NumRunningThreads++;
 		Mtx.unlock();
 
-		int Return = handle_flow(Fd);
+		int ReturnCode = HandleFlow(Fd);
 
 		Mtx.lock();
 		NumRunningThreads--;
 		Mtx.unlock();
 
-		after_endThread(Fd, Return Code);
+		AfterEndFlow(Fd, ReturnCode);
 
 		close(Fd);
 	}

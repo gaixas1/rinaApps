@@ -13,7 +13,7 @@ public:
 protected:
 	int HandleFlow(const int Fd) {
 		union {
-			char Buffer[BUFF_SIZE];
+			ra::byte_t Buffer[BUFF_SIZE];
 			dataSDU Data;
 			initSDU InitData;
 		};
@@ -29,9 +29,9 @@ protected:
 		}
 
 		if (Data.Flags & SDU_FLAG_NAME) {
-			cout << "Started Flow " << Fd << " -> " << (Buffer+sizeof(initSDU)) << endl;
+			std::cout << "Started Flow " << Fd << " -> " << (Buffer+sizeof(initSDU)) << std::endl;
 		} else {
-			cout << "Started Flow " << Fd << endl;
+			std::cout << "Started Flow " << Fd << std::endl;
 		}
 
 		int ReadSize;
@@ -42,9 +42,9 @@ protected:
 			}
 			if (Data.Flags & SDU_FLAG_FIN) {
 				if (Data.Flags & SDU_FLAG_NAME) {
-					cout << "Ended Flow " << Fd << " -> " << (Buffer + sizeof(dataSDU)) << endl;
+					std::cout << "Ended Flow " << Fd << " -> " << (Buffer + sizeof(dataSDU)) << std::endl;
 				} else {
-					cout << "Ended Flow " << Fd << endl;
+					std::cout << "Ended Flow " << Fd << std::endl;
 				}
 				return 0;
 			}
