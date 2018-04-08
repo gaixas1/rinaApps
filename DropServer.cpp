@@ -58,18 +58,12 @@ int main(int argc, char ** argv) {
 	std::vector<std::string> DIFs;
 
 	try {
-		CmdLine cmd("DropServer", ' ', PACKAGE_VERSION);
+		TCLAP::CmdLine cmd("DropServer", ' ', "2.0");
 
-		ValueArg<string> Name_a("n", "name", "",
-			"Application process name, default = DropServer.",
-			false, "DropServer", "string");
-		ValueArg<string> Instance_a("i", "instance", "",
-			"Application process instance, default = 1.",
-			false, "1", "string");
-		UnlabeledMultiArg<string> DIFs_a( "difs",
-			"DIFs to use, empty for any DIF.",
-			false, "string");
-
+        TCLAP::ValueArg<std::string> Name_a("n","name","Application process name, default = DropServer", false, "DropServer", "string");
+        TCLAP::ValueArg<std::string> Instance_a("i","instance","Application process instance, default = 1", false, "1", "string");
+		TCLAP::UnlabeledMultiArg<std::string> DIFs_a("difs","DIFs to use, empty for any DIF", false, "string");
+		
 		cmd.add(Name_a);
 		cmd.add(Instance_a);
 		cmd.add(DIFs_a);
@@ -79,7 +73,7 @@ int main(int argc, char ** argv) {
 		Name = Name_a.getValue();
 		Instance = Instance_a.getValue();
 		DIFs = DIFs_a.getValue();
-	} catch (ArgException &e) {
+	} catch (TCLAP::ArgException &e) {
 		std::cerr << "Failure reading parameters." << std::endl;
 		return -1;
 	}

@@ -24,8 +24,8 @@ namespace ra {
 		struct rina_flow_spec FlowSpec;
 
 		virtual int HandleFlow(const int Fd) { return 0; }
-		virtual int AllocFailed(const int ReturnCode) { return -1 };
-		virtual int AfterEndFlow(const int ReturnCode) { return ReturnCode };
+		virtual int AllocFailed(const int ReturnCode) { return -1; };
+		virtual int AfterEndFlow(const int ReturnCode) { return ReturnCode; };
 	};
 
 	BaseClient::BaseClient(const std::string Name, const std::string Instance, const std::string ServerName, const std::string ServerInstance, const std::string DIF) {

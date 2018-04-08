@@ -1,4 +1,5 @@
 #include <chrono>
+#include <map>
 
 #include <tclap/CmdLine.h>
 
@@ -69,19 +70,19 @@ protected:
 	std::mutex Mt;
 
 	void logger_t() {
-		int tCount;
+		int fCount;
 		std::chrono::seconds s5(5);
 
 		do {
 			std::this_thread::sleep_for(s5);
 			Mt.lock();
-			tCount = Count;
-			mt.unlock();
-			std::cout << "Flows in process " << Count << std::endl;
-		} while (tCount > 0);
+			fCount = Count;
+			Mt.unlock();
+			std::cout << "Flows in progress " << fCount << std::endl;
+		} while (fCount > 0);
 
 		Mt.lock();
-		std::cout << "Currently no flows in process, print log:" << std::endl << std::endl;
+		std::cout << "Currently no flows in progress, print log:" << std::endl << std::endl;
 
 		//Process log
 		long long tCount = 0, tData = 0;
@@ -133,7 +134,7 @@ protected:
 
 	int HandleFlow(const int Fd) {
 		union {
-			char Buffer[BUFF_SIZE];
+			ra::byte_t Buffer[BUFF_SIZE];
 			dataSDU Data;
 			initSDU InitData;
 		};
@@ -149,9 +150,9 @@ protected:
 		}
 
 		if (InitData.Flags & SDU_FLAG_NAME) {
-			cout << "Started Flow " << Fd << " -> " << (Buffer + sizeof(initSDU)) << endl;
+			std::cout << "Started Flow " << Fd << " -> " << (Buffer + sizeof(initSDU)) << std::endl;
 		} else {
-			cout << "Started Flow " << Fd << endl;
+			std::cout << "Started Flow " << Fd << std::endl;
 		}
 
 		if (write(Fd, Buffer, InitData.Size) != (int)InitData.Size) {
@@ -161,20 +162,20 @@ protected:
 
 
 		flow_log * Flow = new flow_log();
-		Flowlow->QoSId = init->QoSId;
-		Flowlow->flowId = init->FlowId;
-		Flowlow->seq_id = Data.SeqId;
+		Flow->QoSId = InitData.QoSId;
+		Flow->flowId = InitData.FlowId;
+		Flow->seq_id = Data.SeqId;
 
 		bool start_logger;
 
 		Mt.lock();
 		start_logger = (Count <= 0);
 		Count++;
-		flow_logs.push_back(flow);
+		flow_logs.push_back(Flow);
 		Mt.unlock();
 
 		if (start_logger) {
-			thread t(&LogServer::logger_t, this);
+			std::thread t(&LogServer::logger_t, this);
 			t.detach();
 		}
 
@@ -218,17 +219,11 @@ int main(int argc, char ** argv) {
 	std::vector<std::string> DIFs;
 
 	try {
-		CmdLine cmd("LogServer", ' ', PACKAGE_VERSION);
+		TCLAP::CmdLine cmd("LogServer", ' ', "2.0");
 
-		ValueArg<string> Name_a("n", "name", "",
-			"Application process name, default = LogServer.",
-			false, "LogServer", "string");
-		ValueArg<string> Instance_a("i", "instance", "",
-			"Application process instance, default = 1.",
-			false, "1", "string");
-		UnlabeledMultiArg<string> DIFs_a("difs",
-			"DIFs to use, empty for any DIF.",
-			false, "string");
+        TCLAP::ValueArg<std::string> Name_a("n","name","Application process name, default = LogServer", false, "LogServer", "string");
+        TCLAP::ValueArg<std::string> Instance_a("i","instance","Application process instance, default = 1", false, "1", "string");
+		TCLAP::UnlabeledMultiArg<std::string> DIFs_a("difs","DIFs to use, empty for any DIF", false, "string");
 
 		cmd.add(Name_a);
 		cmd.add(Instance_a);
@@ -240,7 +235,7 @@ int main(int argc, char ** argv) {
 		Instance = Instance_a.getValue();
 		DIFs = DIFs_a.getValue();
 	}
-	catch (ArgException &e) {
+	catch (TCLAP::ArgException &e) {
 		std::cerr << "Failure reading parameters." << std::endl;
 		return -1;
 	}

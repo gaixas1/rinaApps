@@ -85,5 +85,5 @@ protected:
 private:
 	int _FlowIdent, _QosIdent, _TestDuration;
 	int _Fd;
-	char Buffer[BUFF_SIZE];
+	ra::byte_t Buffer[BUFF_SIZE];
 };
