@@ -139,7 +139,7 @@ int client_base::run() {
 		&_flow_spec,
 		0);
 
-	if (fd != 0) {
+	if (fd <= 0) {
 #ifdef DEBUG
 		std::cerr << "rina_flow_alloc () failed: return "<< fd << std::endl;
 #endif
