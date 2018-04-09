@@ -15,15 +15,6 @@ public:
 		setON(320, 3000, 1000);
 		setOFF(20, 6000, 2000);
 
-
-		if (_packet_size < sizeof(dataSDU)) {
-			sdu_size = sizeof(dataSDU);
-		} else if (_packet_size > BUFF_SIZE) {
-			sdu_size = BUFF_SIZE;
-		} else {
-			sdu_size = _packet_size;
-		}
-
 		long long interval_ns;
 		interval_ns = 1000000000L;		// ns/s
 		interval_ns /= HZ;				// 1/s
@@ -94,7 +85,7 @@ protected:
 			change += std::chrono::milliseconds(rand() % min_ms_off);
 		}
 
-		while (t < endtime) {
+		while (t < Endtime) {
 			if (t > change) {
 				if (isOn) {
 					isOn = false;
@@ -103,7 +94,7 @@ protected:
 				} else {
 					isOn = true;
 					sdu_size = on_sdu_size;
-					change = t + milliseconds(min_ms_on + rand() % var_ms_on);
+					change = t + std::chrono::milliseconds(min_ms_on + rand() % var_ms_on);
 				}
 			}
 			if (sdu_size > 0) {
