@@ -110,7 +110,7 @@ protected:
 				if (SendData(sdu_size) != sdu_size) return -1;
 			}
 			t += interval;
-			sleep_until(t);
+			std::this_thread::sleep_until(t);
 		};
 
 		return 0;
