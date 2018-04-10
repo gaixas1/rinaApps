@@ -76,7 +76,7 @@ protected:
 	int on_sdu_size, off_sdu_size;
 	int min_ms_on, var_ms_on;
 	int min_ms_off, var_ms_off;
-	std::chrono::nanoseconds interval;																														
+	std::chrono::nanoseconds interval;		
 
 	int RunFlow() {
 		unsigned int sdu_size;
@@ -125,6 +125,7 @@ int main(int argc, char ** argv) {
 	float HZ;
 	int PacketSizeOn, AVG_ms_ON, VAR_ms_ON;
 	int PacketSizeOff, AVG_ms_OFF, VAR_ms_OFF;
+	std::string QoSFile;
 	
 	srand(time(NULL));
 
@@ -136,6 +137,7 @@ int main(int argc, char ** argv) {
         TCLAP::ValueArg<std::string> Instance_a("i","instance","Application process instance, default = 1", false, "1", "string");
 		TCLAP::ValueArg<std::string> sName_a("m", "sname", "Server process name, default = DropServer", false, "DropServer", "string");
 		TCLAP::ValueArg<std::string> sInstance_a("j", "sinstance", "Server process instance, default = 1",false, "1", "string");
+		TCLAP::ValueArg<std::string> QoSFile_a("q", "qos", "QoSRequirements filename, default = \"\"", false, "", "string");
 		TCLAP::ValueArg<std::string> DIF_a("d", "dif", "DIF to use, empty for any DIF, default = \"\"",false, "", "string");
 
 		//Client params
@@ -159,7 +161,7 @@ int main(int argc, char ** argv) {
 		cmd.add(Instance_a);
 		cmd.add(sName_a);
 		cmd.add(sInstance_a);
-		cmd.add(DIF_a);
+		cmd.add(QoSFile_a);
 
 		cmd.add(FlowIdent_a);
 		cmd.add(QoSIdent_a);
@@ -173,12 +175,15 @@ int main(int argc, char ** argv) {
 		cmd.add(AVG_ms_OFF_a);
 		cmd.add(VAR_ms_OFF_a);
 
+		cmd.add(DIF_a);
+
 		cmd.parse(argc, argv);
 
 		Name = Name_a.getValue();
 		Instance = Instance_a.getValue();
 		ServerName = sName_a.getValue();
 		ServerInstance = sInstance_a.getValue();
+		QoSFile = QoSFile_a.getValue();
 		DIF = DIF_a.getValue();
 
 		FlowIdent = FlowIdent_a.getValue();
@@ -203,6 +208,7 @@ int main(int argc, char ** argv) {
 	VoiceClient App(Name, Instance, ServerName, ServerInstance, DIF,
 		FlowIdent, QoSIdent, TestDuration,
 		HZ);
+	App.ReadQoSFile(QoSFile);
 	App.setON(PacketSizeOn, AVG_ms_ON, VAR_ms_ON);
 	App.setON(PacketSizeOff, AVG_ms_OFF, VAR_ms_OFF);
 	return App.Run();
