@@ -34,9 +34,9 @@ protected:
 		std::chrono::time_point<std::chrono::system_clock> t = 
 			std::chrono::system_clock::now();
 
-		while (t < endtime) {
+		while (t < Endtime) {
 			if (SendData(sdu_size) != sdu_size) return -1;
-			t = chrono::system_clock::now() + interval;
+			t = std::chrono::system_clock::now() + interval;
 			std::this_thread::sleep_until(t);
 		};
 
