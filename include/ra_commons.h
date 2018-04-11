@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <unistd.h>
 #include <iostream>
 #include <poll.h>
@@ -119,7 +120,7 @@ namespace ra {
 		struct pollfd Fds = { .fd = Fd,.events = POLLIN };
 		int PollRet = poll(&Fds, 1, mSec);
 
-		if (PollRet <= 1) {
+		if (PollRet != 1) {
 			return PollRet;
 		}
 		if (Fds.revents & POLLIN == 0) {
@@ -133,7 +134,7 @@ namespace ra {
 		struct pollfd Fds = { .fd = Fd,.events = POLLIN };
 		int PollRet = poll(&Fds, 1, mSec);
 
-		if (PollRet <= 1) {
+		if (PollRet != 1) {
 			return PollRet;
 		}
 		if (Fds.revents & POLLIN == 0) {
@@ -156,7 +157,7 @@ namespace ra {
 		struct pollfd Fds = { .fd = Fd,.events = POLLOUT };
 		int PollRet = poll(&Fds, 1, mSec);
 
-		if (PollRet <= 1) {
+		if (PollRet != 1) {
 			return PollRet;
 		}
 		if (Fds.revents & POLLOUT == 0) {
@@ -190,9 +191,9 @@ namespace ra {
 		struct pollfd Fds = { .fd = Fd,.events = POLLIN };
 		int PollRet = poll(&Fds, 1, mSec);
 
-		if (PollRet <= 1 || Fds.revents & POLLIN == 0) {
+		if (PollRet != 1 || Fds.revents & POLLIN == 0) {
 #ifdef DEBUG
-			std::cerr << "rina_flow_alloc () failed: timeout" << std::endl;
+			std::cerr << "rina_flow_alloc () failed: timeout | "<< mSec << " milliseconds"  << std::endl;
 #endif
 			return -1;
 		}
@@ -240,7 +241,7 @@ namespace ra {
 			}
 		}
 
-		int Fd = rina_register(Cfd, DIFName, MyName, 0);
+		int Fd = rina_register(Cfd, DIFName, MyName, RINA_F_NOWAIT);
 		if (Fd < 0) {
 #ifdef DEBUG
 			std::cerr << "rina_register () failed: " << strerror(errno) << std::endl;
@@ -251,7 +252,7 @@ namespace ra {
 		struct pollfd Fds = { .fd = Fd,.events = POLLIN };
 		int PollRet = poll(&Fds, 1, mSec);
 
-		if (PollRet <= 1 || Fds.revents & POLLIN == 0) {
+		if (PollRet != 1 || Fds.revents & POLLIN == 0) {
 #ifdef DEBUG
 			std::cerr << "rina_register () failed: timeout" << std::endl;
 #endif
@@ -264,6 +265,7 @@ namespace ra {
 #endif
 			return false;
 		}
+
 		return true;
 	}
 

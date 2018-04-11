@@ -182,11 +182,11 @@ protected:
 
 		int ReadSize;
 		for (;;) {
-			ReadSize = ra::ReadDataTimeout(Fd, Buffer, 1000);
+			ReadSize = ra::ReadData(Fd, Buffer);
 
 			Mt.lock();
 
-			if (ReadSize < 0) {
+			if (ReadSize <= 0) {
 				Count--;
 				Mt.unlock();
 				return -1;
@@ -236,6 +236,7 @@ int main(int argc, char ** argv) {
 		DIFs = DIFs_a.getValue();
 	}
 	catch (TCLAP::ArgException &e) {
+		std::cerr << e.error() << " for arg " << e.argId() << std::endl;
 		std::cerr << "Failure reading parameters." << std::endl;
 		return -1;
 	}

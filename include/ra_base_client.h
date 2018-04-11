@@ -37,6 +37,9 @@ namespace ra {
 	}
 
 	int BaseClient::Run() {
+#ifdef INFO
+		std::cout << "BaseClient Run()"<< std::endl;
+#endif
 		int Fd = AllocFlow(
 			MyName.c_str(),
 			DstName.c_str(),
@@ -46,9 +49,16 @@ namespace ra {
 		);
 
 		if (Fd <= 0) {
+#ifdef INFO
+		std::cout << "Failure allocating flow"<< std::endl;
+#endif
 			return AllocFailed(Fd);
 		}
 		
+#ifdef INFO
+		std::cout << "AllocFlow() success : " << Fd << " | start flow"<< std::endl;
+#endif
+
 		int ReturnCode = HandleFlow(Fd);
 		close(Fd);
 		return AfterEndFlow(ReturnCode);

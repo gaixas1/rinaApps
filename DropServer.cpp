@@ -6,7 +6,7 @@ class DropServer : public ra::BaseServer {
 public:
 	DropServer(const std::string Name, const std::string Instance) :
 		BaseServer(Name, Instance) {
-		RegisterTimeoutMs = 1000;
+		RegisterTimeoutMs = 5000;
 		ListenTimeoutMs = -1;
 	}
 
@@ -34,10 +34,15 @@ protected:
 			std::cout << "Started Flow " << Fd << std::endl;
 		}
 
+		if (write(Fd, Buffer, InitData.Size) != (int)InitData.Size) {
+			std::cerr << "First packet ECHO failed" << std::endl;
+			return -1;
+		}
+
 		int ReadSize;
 		for (;;) {
-			ReadSize = ra::ReadDataTimeout(Fd, Buffer, 1000);
-			if (ReadSize < 0) {
+			ReadSize = ra::ReadData(Fd, Buffer);
+			if (ReadSize <= 0) {
 				return -1;
 			}
 			if (Data.Flags & SDU_FLAG_FIN) {
@@ -46,8 +51,13 @@ protected:
 				} else {
 					std::cout << "Ended Flow " << Fd << std::endl;
 				}
-				return 0;
+				break;
 			}
+		}
+
+		if (write(Fd, Buffer, Data.Size) != (int) Data.Size) {
+			std::cerr << "Last packet ECHO failed" << std::endl;
+			return -1;
 		}
 	}
 };
@@ -74,6 +84,7 @@ int main(int argc, char ** argv) {
 		Instance = Instance_a.getValue();
 		DIFs = DIFs_a.getValue();
 	} catch (TCLAP::ArgException &e) {
+		std::cerr << e.error() << " for arg " << e.argId() << std::endl;
 		std::cerr << "Failure reading parameters." << std::endl;
 		return -1;
 	}

@@ -61,10 +61,12 @@ protected:
 			return -1;
 		}
 
-		if (ra::ReadDataTimeout(Fd, Buffer, 1000) <= 0) {
-			std::cerr << "No data echo received during for the fin SDU" << std::endl;
+		if (ra::ReadDataTimeout(Fd, Buffer, 10000) <= 0) {
+			std::cerr << "No data echo received for the fin SDU" << std::endl;
 			return -1;
 		}
+
+		return ReturnCode;
 	}
 
 	int SendData(size_t Size, int mSec = -1) {

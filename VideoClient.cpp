@@ -59,7 +59,7 @@ int main(int argc, char ** argv) {
         TCLAP::ValueArg<std::string> Instance_a("i","instance","Application process instance, default = 1", false, "1", "string");
 		TCLAP::ValueArg<std::string> sName_a("m", "sname", "Server process name, default = DropServer", false, "DropServer", "string");
 		TCLAP::ValueArg<std::string> sInstance_a("j", "sinstance", "Server process instance, default = 1",false, "1", "string");
-		TCLAP::ValueArg<std::string> DIF_a("d", "dif", "DIF to use, empty for any DIF, default = \"\"",false, "", "string");
+		TCLAP::ValueArg<std::string> DIF_a("D", "dif", "DIF to use, empty for any DIF, default = \"\"",false, "", "string");
 
 		//Client params
 		TCLAP::ValueArg<int> FlowIdent_a("I", "flowid", "Unique flow identifier, default = 0",false, 0, "int");
@@ -103,6 +103,7 @@ int main(int argc, char ** argv) {
 
 	}
 	catch (TCLAP::ArgException &e) {
+		std::cerr << e.error() << " for arg " << e.argId() << std::endl;
 		std::cerr << "Failure reading parameters." << std::endl;
 		return -1;
 	}

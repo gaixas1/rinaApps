@@ -48,23 +48,49 @@ namespace ra {
 	}
 
 	int BaseServer::Run() {
+#ifdef INFO
+		std::cout << "BaseServer Run()"<< std::endl;
+#endif
 		int Cfd = -1;
+
 		if (DIFs.empty()) {
-			if (!RegisterApp(Cfd, MyName.c_str(), RegisterTimeoutMs)) {
+			if (!RegisterApp(Cfd, MyName.c_str(), RegisterTimeoutMs) ) {
+#ifdef INFO
+				std::cout << "Cfd = " << Cfd << " | Registered into default DIF failed" << std::endl;
+#endif
 				return -1;
+			} 
+#ifdef INFO
+			else {
+				std::cout << "Cfd = " << Cfd << " | Registered into default DIF" << std::endl;
 			}
+#endif
 		} else {
 			for (auto DIF : DIFs) {
-				if (!RegisterApp(Cfd, MyName.c_str()), RegisterTimeoutMs, DIF.c_str()) {
+				if (!RegisterApp(Cfd, MyName.c_str(), RegisterTimeoutMs, DIF.c_str() ) ) {
+#ifdef INFO
+					std::cout << "Cfd = " << Cfd << " | Registered into DIF " << DIF << " failed" << std::endl;
+#endif
 					return -1;
 				}
+#ifdef INFO
+				else {
+					std::cout << "Cfd = " << Cfd << " | Registered into DIF " << DIF << std::endl;
+				}
+#endif
 			}
 		}
 
 		CloseOnNextLoop = false;
 		NumRunningThreads = 0;
+#ifdef INFO
+		std::cout << "Start listening loop"<< std::endl;
+#endif
 		for (;;) {
 			if (CloseOnNextLoop) {
+#ifdef INFO
+				std::cout << "Close listening loop"<< std::endl;
+#endif
 				break;
 			}
 			int Fd = ListenFlow(Cfd, ListenTimeoutMs, NULL, NULL);
@@ -72,18 +98,30 @@ namespace ra {
 				continue;
 			}
 			if (Fd < 0) {
+#ifdef DEBUG
+				std::cout << "Bad Fd from ListenFlow : "<< Fd << std::endl;
+#endif
 				break;
 			}
 
+#ifdef DEBUG
+			std::cout << "Start new flow : "<< Fd << std::endl;
+#endif
 			std::thread t(&BaseServer::RunThread, this, Fd);
 			t.detach();
 		}
 
 		if (WaitForClose) {
+#ifdef INFO
+			std::cout << "Wait for running flows"<< std::endl;
+#endif
 			while (NumRunningThreads > 0) {
 				sleep(1);
 			}
 		}
+#ifdef INFO
+			std::cout << "Close server"<< std::endl;
+#endif
 		return AfterEnd();
 	}
 

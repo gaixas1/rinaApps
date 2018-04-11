@@ -213,14 +213,16 @@ int server_base::run() {
 		} 
 
 		// New flow request
-		fd = rina_flow_accept(cfd, NULL, NULL, 0);
+char *dstAppName;
+		fd = rina_flow_accept(cfd, &dstAppName, NULL, 0);
 		if (fd < 0) {
 #ifdef DEBUG
 			std::cerr << "rina_flow_accept () failed: return "<< fd << "; stop listening" <<  std::endl;
 #endif
 			break;
 		}
-
+std::cout << dstAppName << std::endl;
+delete dstAppName;
 		std::thread t(&server_base::runThread, this, fd);
 		t.detach();
 	}
