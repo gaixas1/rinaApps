@@ -5,15 +5,17 @@ rina_lib="/irati/lib/librina-api.so"
 build_path="./bin/"
 debug=0
 info=0
+max_pdu=1400
 
-usage(){ echo "Usage: $0 [-h] [-i <string>] [-l <string>] [-b <string>] [-d] [-f].
+usage(){ echo "Usage: $0 [-h] [-i <string>] [-l <string>] [-b <string>] [-p <int>] [-d] [-f].
 i : include path, default \"${rina_include}\"
 l : rina lib, default \"${rina_lib}\"
 b : build path, default \"${build_path}\"
+p : max pdu size, default \"${max_pdu}\"
 d : debug, default false
 f : info, default false" 1>&2; exit 1;}
 
-while getopts ":hi:l:b:df" o; do
+while getopts ":hi:l:b:p:df" o; do
     case ${o} in
         h)
             usage
@@ -27,6 +29,9 @@ while getopts ":hi:l:b:df" o; do
         b)
             build_path=${OPTARG}
             ;;
+        p)
+            max_pdu=${OPTARG}
+            ;;
         d)
             debug=1
             ;;
@@ -37,7 +42,7 @@ while getopts ":hi:l:b:df" o; do
 done
 
 
-compile_args="-I ${rina_include} -L. ${rina_lib} -lpthread" 
+compile_args="-I ${rina_include} -L. ${rina_lib} -lpthread -D MAX_PDU=${max_pdu}" 
 if [ ${debug} -eq 1 ]
 then
     compile_args=${compile_args}" -D DEBUG"
@@ -47,11 +52,14 @@ then
     compile_args=${compile_args}" -D INFO"
 fi
 
+
 mkdir -p ${build_path}
 
 g++ -o ${build_path}DropServer DropServer.cpp ${compile_args}
 
 g++ -o ${build_path}LogServer LogServer.cpp ${compile_args}
+
+g++ -o ${build_path}DumpServer DumpServer.cpp ${compile_args}
 
 g++ -o ${build_path}OnOffClient OnOffClient.cpp ${compile_args}
 
@@ -60,3 +68,5 @@ g++ -o ${build_path}DataClient DataClient.cpp ${compile_args}
 g++ -o ${build_path}VideoClient VideoClient.cpp ${compile_args}
 
 g++ -o ${build_path}VoiceClient VoiceClient.cpp ${compile_args}
+
+g++ -o ${build_path}PoissonClient PoissonClient.cpp ${compile_args}

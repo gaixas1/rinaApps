@@ -4,6 +4,8 @@
 #include <cstring>
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
+#include <string>
 #include <poll.h>
 
 #include <rina/api.h>
@@ -73,6 +75,15 @@ namespace ra {
 	*/
 	int ListenFlow(const int Cfd, char **RemoteApp = NULL, struct rina_flow_spec * FlowSpec = NULL);
 	int ListenFlow(const int Cfd, const int mSec, char **RemoteApp = NULL, struct rina_flow_spec * FlowSpec = NULL);
+
+	/*
+	Update FlowSpec with QoS requirements read from File "Filename"
+	- Return values:
+	* true	 -> File read and all parameters valid
+	* false  -> Something failed
+	- If the file is correctly read but some parameters are not valid, valid values are still updated.
+	*/
+	bool ParseQoSRequirementsFile(struct rina_flow_spec * FlowSpec, char * Filename);
 
 	//Implementation
 	int ReadData(const int Fd, byte_t * Buffer) {
@@ -146,8 +157,26 @@ namespace ra {
 
 	int WriteData(const int Fd, byte_t * Buffer, const size_t Size) {
 		try {
-			ssize_t Wt = write(Fd, Buffer, Size);
-			return Wt;
+#ifdef MAX_PDU
+			int W = 0;
+			size_t tSize = Size;	
+			while(tSize > MAX_PDU){
+			 	ssize_t Wt = write(Fd, Buffer, MAX_PDU);
+				if(Wt < 0){
+				 	return -1;
+				}
+				tSize -= MAX_PDU;
+				Buffer += MAX_PDU;
+				W += Wt;
+			}
+			ssize_t Wt = write(Fd, Buffer, tSize);
+			if(Wt < 0){
+				return -1;
+			}
+			return W + Wt;
+#else
+			return write(Fd, Buffer, Size);
+#endif
 		} catch (...) {
 			return -1;
 		}
@@ -308,5 +337,53 @@ namespace ra {
 #endif
 
 		return Fd;
+	}
+
+	bool ParseQoSRequirementsFile(struct rina_flow_spec * FlowSpec, const char * Filename) {
+		bool ReturnValue = true;
+
+		std::ifstream File(Filename);
+		if (!File.is_open()) {
+			return false;
+		}
+
+		std::string Param, Value;
+		while (File >> Param >> Value) {
+			if (Param != "" && Value != "") {
+				if (Param == "reliable" || Param == "Reliable") {
+					FlowSpec->max_sdu_gap = (Value == "true") ? 0 : -1;
+				}
+				else  if (Param == "orderedDelivery" || Param == "OrderedDelivery") {
+					FlowSpec->in_order_delivery = (Value == "true") ? false : true;
+				}
+				else  if (Param == "msgBoundaries" || Param == "MsgBoundaries") {
+					FlowSpec->msg_boundaries = (Value == "true") ? false : true;
+				}
+				else if (Param == "maxAllowableGap" || Param == "MaxAllowableGap") {
+					FlowSpec->max_sdu_gap = stoi(Value);
+				}
+				else if (Param == "delay" || Param == "Delay") {
+					FlowSpec->max_delay = stoi(Value);
+				}
+				else if (Param == "jitter" || Param == "Jitter") {
+					FlowSpec->max_jitter = stoi(Value);
+				}
+				else if (Param == "averageBandwidth" || Param == "AverageBandwidth") {
+					FlowSpec->avg_bandwidth = stoi(Value);
+					if (FlowSpec->avg_bandwidth <= 0) {
+						FlowSpec->avg_bandwidth = 1;
+					}
+				}
+				else if (Param == "loss" || Param == "Loss") {
+					FlowSpec->max_loss = stoi(Value);
+				}
+				else {
+					ReturnValue = false;
+				}
+			}
+		}
+		File.close();
+
+		return ReturnValue;
 	}
 }

@@ -51,15 +51,17 @@ int main(int argc, char ** argv) {
 	int FlowIdent, QoSIdent, TestDuration;
 	unsigned int PacketSize;
 	unsigned long long RateBPS;
+	std::string QoSFile;
 
 	try {
 		TCLAP::CmdLine cmd("DataClient", ' ', "2.0");
 
 		//Base params
-        TCLAP::ValueArg<std::string> Name_a("n","name","Application process name, default = OnOffClient", false, "LogServer", "string");
+        TCLAP::ValueArg<std::string> Name_a("n","name","Application process name, default = DataClient", false, "DataClient", "string");
         TCLAP::ValueArg<std::string> Instance_a("i","instance","Application process instance, default = 1", false, "1", "string");
 		TCLAP::ValueArg<std::string> sName_a("m", "sname", "Server process name, default = DropServer", false, "DropServer", "string");
-		TCLAP::ValueArg<std::string> sInstance_a("j", "sinstance", "Server process instance, default = 1",false, "1", "string");
+		TCLAP::ValueArg<std::string> sInstance_a("j", "sinstance", "Server process instance, default = 1", false, "1", "string");
+		TCLAP::ValueArg<std::string> QoSFile_a("Q", "qos", "QoSRequirements filename, default = \"\"", false, "", "string");
 		TCLAP::ValueArg<std::string> DIF_a("D", "dif", "DIF to use, empty for any DIF, default = \"\"",false, "", "string");
 
 		//Client params
@@ -76,7 +78,7 @@ int main(int argc, char ** argv) {
 		cmd.add(Instance_a);
 		cmd.add(sName_a);
 		cmd.add(sInstance_a);
-		cmd.add(DIF_a);
+		cmd.add(QoSFile_a);
 
 		cmd.add(FlowIdent_a);
 		cmd.add(QoSIdent_a);
@@ -85,12 +87,15 @@ int main(int argc, char ** argv) {
 		cmd.add(PacketSize_a);
 		cmd.add(RateMBPS_a);
 
+		cmd.add(DIF_a);
+
 		cmd.parse(argc, argv);
 
 		Name = Name_a.getValue();
 		Instance = Instance_a.getValue();
 		ServerName = sName_a.getValue();
 		ServerInstance = sInstance_a.getValue();
+		QoSFile = QoSFile_a.getValue();
 		DIF = DIF_a.getValue();
 
 		FlowIdent = FlowIdent_a.getValue();
@@ -113,5 +118,6 @@ int main(int argc, char ** argv) {
 	DataClient App(Name, Instance, ServerName, ServerInstance, DIF,
 		FlowIdent, QoSIdent, TestDuration,
 		PacketSize, RateBPS);
+	App.ReadQoSFile(QoSFile);
 	return App.Run();
 }
