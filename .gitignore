@@ -29,6 +29,7 @@
 # Executables
 build/*
 bin/*
+bindebug/*
 *.exe
 *.out
 *.app
