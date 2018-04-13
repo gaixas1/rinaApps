@@ -20,7 +20,6 @@ public:
 
 		RateBpns = max_flow_rate_bps;
 		RateBpns /= 8000000000.0;
-		RateBpns *= load;
 
 	}
 
