@@ -42,7 +42,8 @@ while getopts ":hi:l:b:p:df" o; do
 done
 
 
-compile_args="-I ${rina_include} -L. ${rina_lib} -lpthread -D MAX_PDU=${max_pdu}" 
+compile_args=" -I ${rina_include} -L. ${rina_lib} -lpthread -D MAX_PDU=${max_pdu}" 
+#compile_args=" -I ${rina_include} -L. ${rina_lib} -lpthread" 
 if [ ${debug} -eq 1 ]
 then
     compile_args=${compile_args}" -D DEBUG"

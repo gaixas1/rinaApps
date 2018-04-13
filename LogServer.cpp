@@ -11,6 +11,7 @@ struct flow_log {
 		count = 0; 
 		data = 0;
 		maxLat = 0;
+		minLat = 9999999999;
 		latCount = 0;
 	}
 
@@ -20,6 +21,7 @@ struct flow_log {
 		data += sdu->Size;
 		long long lat = t - sdu->SendTime;
 		if (lat > maxLat) maxLat = lat;
+		if (lat < minLat) minLat = lat;
 		latCount += lat;
 	}
 
@@ -30,6 +32,7 @@ struct flow_log {
 	long long count, data;
 
 	long long maxLat;
+	long long minLat;
 	long double latCount;
 };
 
@@ -39,6 +42,7 @@ struct qos_log {
 		data = 0; 
 		total = 0;
 		maxLat = 0;
+		minLat = 9999999999;
 		latCount = 0;
 	}
 	void process(flow_log * f) {
@@ -46,12 +50,14 @@ struct qos_log {
 		total += f->seq_id + 1;
 		data += f->data;
 		if (f->maxLat > maxLat) maxLat = f->maxLat;
+		if (f->minLat < minLat) minLat = f->minLat;
 		latCount += f->latCount;
 	}
 
 	long long count, total, data;
 
 	long long maxLat;
+	long long minLat;
 	long double latCount;
 };
 
@@ -67,6 +73,7 @@ public:
 protected:
 	int Count;
 	std::vector<flow_log*> flow_logs;
+	std::map<int, qos_log> qos_logs;
 	std::mutex Mt;
 
 	void logger_t() {
@@ -87,7 +94,6 @@ protected:
 		//Process log
 		long long tCount = 0, tData = 0;
 
-		std::map<int, qos_log> qos_logs;
 		for (auto f : flow_logs) {
 			tCount += f->count;
 			tData += f->data;
@@ -103,8 +109,9 @@ protected:
 
 			std::cout << "\t" << f->flowId << " (" << (int)f->QoSId << ") | "
 				<< c << " / " << t << " (" << (l*100.0 / c) << " %) | " << f->data << " B"
-				<< " ||" << (f->maxLat / 1000.0)
+				<< " ||" << (f->minLat / 1000.0)
 				<< " -- " << (f->latCount / (1000.0*c))
+				<< " -- " << (f->maxLat / 1000.0)
 				<< std::endl;
 		}
 
@@ -116,7 +123,7 @@ protected:
 
 			std::cout << "\t(" << QoSId << ") | "
 				<< q.count << " | " << l << " | " << q.total << "  || "
-				<< (q.maxLat / 1000.0) << "  | " << (q.latCount / (1000 * q.count));
+				<< (q.minLat / 1000.0) << "  -- " << (q.latCount / (1000 * q.count))<< "  -- " << (q.maxLat / 1000.0);
 			std::cout << "\t(" << QoSId << ")\t"
 				<< (100.0*l / q.total) << " % || "
 				<< (q.latCount / (1000 * q.count)) << " -- " << (q.maxLat / 1000.0) << std::endl;

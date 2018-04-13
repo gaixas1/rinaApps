@@ -196,12 +196,11 @@ int main(int argc, char ** argv) {
 		return -1;
 	}
 
-
 	VoiceClient App(Name, Instance, ServerName, ServerInstance, DIF,
 		FlowIdent, QoSIdent, TestDuration,
 		HZ);
 	App.ReadQoSFile(QoSFile);
 	App.setON(PacketSizeOn, AVG_ms_ON, VAR_ms_ON);
-	App.setON(PacketSizeOff, AVG_ms_OFF, VAR_ms_OFF);
+	App.setOFF(PacketSizeOff, AVG_ms_OFF, VAR_ms_OFF);
 	return App.Run();
 }

@@ -111,7 +111,7 @@ int main(int argc, char ** argv) {
 		TCLAP::ValueArg<int> TestDuration_a("d", "duration", "Test duration in s, default = 10",false, 10, "int");
 		
 		//PoissonParams
-		TCLAP::ValueArg<unsigned int> PacketSize_a("S", "pSize", "Packet size in B, default 1000B", false, 1000, "unsigned int");
+		TCLAP::ValueArg<unsigned int> PacketSize_a("S", "pSize", "Average packet size in B at load 1.0, default 1000B", false, 1000, "unsigned int");
 		TCLAP::ValueArg<float> RateMBPS_a("M", "Mbps", "Max Link Rate in Mbps, default = 10.0",false, 10.0f, "float");
 		TCLAP::ValueArg<double> Load_a("L", "load", "Average flow load, default 1.0", false, 1.0, "double");
 
