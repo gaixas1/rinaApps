@@ -42,7 +42,6 @@ protected:
 		std::queue<double> QDuration;
 
 		while (t < Endtime) {
-
 			while(NextCreate <= t){
 				QCreation.push(NextCreate);
 				QDuration.push(ht_distribution(generator));
@@ -79,6 +78,7 @@ protected:
 				break;
 			}
 			std::this_thread::sleep_until(t);
+			t = std::chrono::system_clock::now();
 		};
 
 		return 0;
