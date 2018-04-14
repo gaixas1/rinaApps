@@ -2,7 +2,9 @@
 
 #include <cstdint>
 
+#ifndef BUFF_SIZE
 #define BUFF_SIZE 10000
+#endif
 
 #define SDU_FLAG_INIT	1
 #define SDU_FLAG_FIN	2

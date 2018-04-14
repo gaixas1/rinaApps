@@ -203,6 +203,9 @@ namespace ra {
 			std::cerr << "rina_flow_alloc () failed: " << strerror(errno) << std::endl;
 		}
 #endif
+#ifdef INFO
+		std::cout << "rina_flow_alloc () succes: " << Fd << std::endl;
+#endif
 		return Fd;
 	}
 
@@ -232,6 +235,9 @@ namespace ra {
 			std::cerr << "rina_flow_alloc_wait () failed: " << strerror(errno) << std::endl;
 		}
 #endif
+#ifdef INFO
+		std::cout << "rina_flow_alloc () succes: " << Fd << std::endl;
+#endif
 		return Fd;
 	}
 
@@ -252,6 +258,9 @@ namespace ra {
 #endif
 			return false;
 		}
+#ifdef INFO
+		std::cout << "rina_register () succes" << std::endl;
+#endif
 		return true;
 	}
 
@@ -295,6 +304,9 @@ namespace ra {
 			return false;
 		}
 
+#ifdef INFO
+		std::cout << "rina_register () succes" << std::endl;
+#endif
 		return true;
 	}
 
@@ -304,6 +316,9 @@ namespace ra {
 		if (Fd < 0) {
 			std::cerr << "rina_flow_accept () failed: " << strerror(errno) << std::endl;
 		}
+#endif
+#ifdef INFO
+		std::cout << "rina_flow_accept () succes: " << Fd << std::endl;
 #endif
 		return Fd;
 	}
@@ -336,6 +351,9 @@ namespace ra {
 		}
 #endif
 
+#ifdef INFO
+		std::cout << "rina_flow_accept () succes: " << Fd << std::endl;
+#endif
 		return Fd;
 	}
 

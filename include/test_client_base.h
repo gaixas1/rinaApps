@@ -40,12 +40,16 @@ protected:
 		InitData->FlowId = _FlowIdent;
 
 		if (SendData(sizeof(initSDU), 1000) != sizeof(initSDU)) {
+#ifdef INFO
 			std::cerr << "No data sent during the first second of lifetime" << std::endl;
+#endif
 			return -1;
 		}
 
 		if (ra::ReadDataTimeout(Fd, Buffer, 1000) <= 0) {
+#ifdef INFO
 			std::cerr << "No data echo received during the first second of lifetime" << std::endl;
+#endif
 			return -1;
 		}
 
@@ -57,12 +61,16 @@ protected:
 
 		Data->Flags = SDU_FLAG_FIN;
 		if (SendData(sizeof(dataSDU), 1000) != sizeof(dataSDU)) {
+#ifdef INFO
 			std::cerr << "failure sending fin SDU" << std::endl;
+#endif
 			return -1;
 		}
 
 		if (ra::ReadDataTimeout(Fd, Buffer, 10000) <= 0) {
+#ifdef INFO
 			std::cerr << "No data echo received for the fin SDU" << std::endl;
+#endif
 			return -1;
 		}
 

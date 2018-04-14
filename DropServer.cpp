@@ -19,23 +19,31 @@ protected:
 		};
 
 		if (ra::ReadDataTimeout(Fd, Buffer, 1000) <= 0) {
+#ifdef INFO
 			std::cerr << "No data received during the first second of lifetime" << std::endl;
+#endif
 			return -1;
 		}
 
 		if (Data.Flags & SDU_FLAG_INIT == 0) {
+#ifdef INFO
 			std::cerr << "First received packet not with INIT flag" << std::endl;
+#endif
 			return -1;
 		}
 
+#ifdef INFO
 		if (Data.Flags & SDU_FLAG_NAME) {
 			std::cout << "Started Flow " << Fd << " -> " << (Buffer+sizeof(initSDU)) << std::endl;
 		} else {
 			std::cout << "Started Flow " << Fd << std::endl;
 		}
+#endif
 
 		if (write(Fd, Buffer, InitData.Size) != (int)InitData.Size) {
+#ifdef INFO
 			std::cerr << "First packet ECHO failed" << std::endl;
+#endif
 			return -1;
 		}
 
@@ -46,17 +54,21 @@ protected:
 				return -1;
 			}
 			if (Data.Flags & SDU_FLAG_FIN) {
+#ifdef INFO
 				if (Data.Flags & SDU_FLAG_NAME) {
 					std::cout << "Ended Flow " << Fd << " -> " << (Buffer + sizeof(dataSDU)) << std::endl;
 				} else {
 					std::cout << "Ended Flow " << Fd << std::endl;
 				}
+#endif
 				break;
 			}
 		}
 
 		if (write(Fd, Buffer, Data.Size) != (int) Data.Size) {
+#ifdef INFO
 			std::cerr << "Last packet ECHO failed" << std::endl;
+#endif
 			return -1;
 		}
 	}
